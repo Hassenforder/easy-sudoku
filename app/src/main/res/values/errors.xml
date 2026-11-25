@@ -1,0 +1,12 @@
+<resources>
+    <string name="value_empty">Value is empty</string>
+    <string name="value_blank">Value is blank</string>
+    <string name="value_negative_forbidden">Negative value is forbidden</string>
+    <string name="value_zero_forbidden">Zero value is forbidden</string>
+    <string name="value_too_short">Value is too short</string>
+    <string name="value_too_long">Value is too long</string>
+
+    <string name="size_must_be_9">Sorry but for the moment only 9x9 grid can be used</string>
+    <string name="size_must_be_squared">The size of the list should be squared of the puzzle size</string>
+    <string name="level_must_set">Chose one valid level</string>
+</resources>

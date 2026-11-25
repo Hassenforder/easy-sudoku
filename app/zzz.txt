@@ -1,0 +1,122 @@
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+
+// Step 1: The Unified Data Model (The internal "engine")
+// This can be in its own file, e.g., IconModel.kt
+
+/**
+ * A unified model to describe any icon-like visual in the app.
+ * It decouples the UI description from the actual Composable implementation.
+ */
+sealed class IconModel {
+    data class TintedVector(val imageVector: ImageVector, val tint: Color) : IconModel()
+    data class UntintedVector(val imageVector: ImageVector) : IconModel()
+    data class LegacyPainter(val painter: Painter) : IconModel()
+}
+
+// Step 2: The Universal Renderer (The internal "engine")
+// This can be in its own file, e.g., AppIcon.kt
+
+/**
+ * The one and only Composable in your app responsible for rendering an IconModel.
+ * It intelligently handles all cases defined in the sealed class.
+ */
+@Composable
+fun AppIcon(
+    iconModel: IconModel,
+    modifier: Modifier = Modifier,
+    contentDescription: String? = null
+) {
+    when (iconModel) {
+        is IconModel.TintedVector -> {
+            Icon(
+                imageVector = iconModel.imageVector,
+                contentDescription = contentDescription,
+                modifier = modifier,
+                tint = iconModel.tint // Apply the explicit tint
+            )
+        }
+        is IconModel.UntintedVector -> {
+            Icon(
+                imageVector = iconModel.imageVector,
+                contentDescription = contentDescription,
+                modifier = modifier,
+                tint = Color.Unspecified // Use LocalContentColor from the theme
+            )
+        }
+        is IconModel.LegacyPainter -> {
+            Icon(
+                painter = iconModel.painter,
+                contentDescription = contentDescription,
+                modifier = modifier,
+                tint = Color.Unspecified // CRITICAL: Use Unspecified for painters
+            )
+        }
+    }
+}
+
+// Step 3: The Simple and Intuitive Builder Extensions (The developer-facing API)
+// This can be in its own file, e.g., IconModelExtensions.kt
+
+/**
+ * Creates a tinted IconModel directly from an ImageVector.
+ * Usage: Icons.Filled.Star.withTint(Color.Yellow)
+ */
+fun ImageVector.withTint(tint: Color): IconModel {
+    return IconModel.TintedVector(this, tint)
+}
+
+/**
+ * Creates a default, untinted IconModel to inherit color from its context.
+ * Usage: Icons.Filled.Warning.asIcon()
+ */
+fun ImageVector.asIcon(): IconModel {
+    return IconModel.UntintedVector(this)
+}
+
+/**
+ * Wraps a Painter (from Coil, etc.) into our model.
+ * Usage: rememberAsyncImagePainter(...).asIcon()
+ */
+fun Painter.asIcon(): IconModel {
+    return IconModel.LegacyPainter(this)
+}
+
+
+// --- USAGE EXAMPLE ---
+
+@Preview(showBackground = true, name = "Final Implementation Demo")
+@Composable
+fun FinalIconShowcase() {
+    // Enjoy the clean, one-liner experience!
+    val icons: List<IconModel> = listOf(
+        Icons.Default.CheckCircle.withTint(Color(0xFF4CAF50)), // Success
+        Icons.Default.Info.withTint(Color(0xFF2196F3)),        // Info
+        Icons.Default.Warning.asIcon()                         // Warning with default theme color
+    )
+
+    Row(
+        modifier = Modifier.padding(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        icons.forEach { icon ->
+            AppIcon(
+                iconModel = icon,
+                contentDescription = "Status Icon"
+            )
+        }
+    }
+}
